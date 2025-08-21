@@ -22,17 +22,16 @@ const CATEGORIES = [
     id: "clássicos",
     title: "Clássicos",
     items: [
-      { id: "brigadeiro", name: "Brigadeiro", price: 10.0, desc: "Bolo de chocolate com camadas de brigadeiro cremoso." },
-      { id: "beijinho", name: "Beijinho", price: 10.0, desc: "Coco fresco com creme de beijinho e bolo branco." },
-      { id: "ninho", name: "Ninho", price: 11.0, desc: "Leite Ninho com toque suave de baunilha." },
-      { id: "casadinho", name: "Casadinho", price: 11.0, desc: "Metade brigadeiro, metade beijinho – perfeito!" },
+      { id: "cenoura", name: "Cenoura com chocolate", price: 10.0, desc: "Bolo fofinho de cenoura com cobertura de chocolate cremoso." },
+      { id: "chocolate", name: "Chocolate", price: 12.0, desc: "Camadas intensas de bolo e creme de chocolate." },
+      { id: "ninho", name: "Ninho", price: 11.0, desc: "Creme de Leite Ninho com massa macia de baunilha." },
+
     ],
   },
   {
     id: "especiais",
     title: "Especiais",
     items: [
-      { id: "prestigio", name: "Prestígio", price: 12.0, desc: "Chocolate + coco cremoso." },
       { id: "morango-ninho", name: "Ninho com Morango", price: 13.0, desc: "Creme de Ninho com pedaços de morango." },
       { id: "oreo", name: "Oreo", price: 13.0, desc: "Creme de chocolate com biscoito crocante." },
     ],
