@@ -156,7 +156,7 @@ export default function DoceEncantoSite() {
       <header className="sticky top-0 z-40 backdrop-blur bg-rose-50/80 border-b border-rose-200">
         <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img src="/logo.png" alt="Doce Encanto" className="h-12 w-12 rounded-full ring-2 ring-rose-200 object-cover" />
+            <img src="/logo.jpg" alt="WhatsApp Image 2025-08-21 at 10.10.58" className="h-12 w-12 rounded-full ring-2 ring-rose-200 object-cover" />
             <div>
               <h1 className="text-xl font-bold text-amber-900">Doce Encanto</h1>
               <p className="text-xs text-amber-900/70">Bolo no pote – Tucuruí/PA</p>
