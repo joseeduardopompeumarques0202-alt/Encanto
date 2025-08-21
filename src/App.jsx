@@ -104,7 +104,7 @@ function Header() {
     <header className="sticky top-0 z-40 backdrop-blur bg-white/70 border-b" style={{ borderColor: palette.accent }}>
       <div className="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <img src="/logo.png" alt="Doce Encanto" className="h-12 w-12 rounded-full ring-2" style={{ ringColor: palette.accent2 }} />
+          <img src="logo.png" alt="Doce Encanto" className="h-12 w-12 rounded-full ring-2" style={{ ringColor: palette.accent2 }} />
           <div>
             <h1 className="font-black text-xl md:text-2xl" style={{ color: palette.dark }}>Doce Encanto</h1>
             <p className="text-xs md:text-sm" style={{ color: palette.mid }}>Bolos no pote feitos com carinho ✨</p>
@@ -140,7 +140,7 @@ function Hero() {
         <div className="relative">
           <div className="absolute -top-10 -right-10 w-72 h-72 rounded-full blur-3xl opacity-40" style={{ background: palette.accent2 }} />
           <div className="rounded-3xl p-6 shadow-xl ring-1" style={{ background: "white", ringColor: palette.accent }}>
-            <img src="/logo.png" alt="Logo Doce Encanto" className="w-full aspect-square object-contain rounded-2xl" />
+            <img src="logo.png" alt="Logo Doce Encanto" className="w-full aspect-square object-contain rounded-2xl" />
           </div>
         </div>
       </div>
