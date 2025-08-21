@@ -1,245 +1,237 @@
-import React, { useState, useMemo } from "react";
+import React, { useMemo, useState } from "react";
 
-// === Doce Encanto – Site para Instagram Bio === //
-// - TailwindCSS pronto
-// - Menu de sabores, combos, entrega e retirada
-// - Botão "Finalizar Pedido" abre o WhatsApp com os detalhes preenchidos
-// - Logo em /logo.png (coloque sua imagem no public como logo.png)
-// - Paleta segue sua identidade marrom + rosa
+// === Doce Encanto – Site para Instagram Bio ===
+// - TailwindCSS
+// - Menu + Carrinho + Total + Pagamento + Entrega/Retirada
+// - Ao "Finalizar Pedido" abre WhatsApp com tudo preenchido
+// - Logo deve estar em /logo.png (na pasta public)
+// - Identidade: marrom + rosa
+// - WhatsApp oficial: +55 94 98117-6517
 
-const App = () => {
-  const [carrinho, setCarrinho] = useState([]);
-  const [entrega, setEntrega] = useState("");
-  const [nome, setNome] = useState("");
-  const [endereco, setEndereco] = useState("");
+// --- Helpers ---
+const BRL = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
+function classNames(...cn) {
+  return cn.filter(Boolean).join(" ");
+}
 
-  const produtos = {
-    classicos: [
-      { nome: "Cenoura com chocolate", preco: 10 },
-      { nome: "Chocolate", preco: 12 },
-      { nome: "Ninho", preco: 11 },
+// --- Menu ---
+const CATEGORIES = [
+  {
+    id: "clássicos",
+    title: "Clássicos",
+    items: [
+      { id: "cenoura-chocolate", name: "Cenoura com Chocolate", price: 10.0, desc: "Bolo de cenoura fofinho com cobertura de chocolate." },
+      { id: "chocolate", name: "Chocolate", price: 12.0, desc: "Bolo de chocolate com recheio cremoso." },
+      { id: "ninho", name: "Ninho", price: 11.0, desc: "Leite Ninho com toque suave de baunilha." },
     ],
-    especiais: [
-      { nome: "Oreo", preco: 14 },
-      { nome: "Ninho com morango", preco: 14 },
+  },
+  {
+    id: "especiais",
+    title: "Especiais",
+    items: [
+      { id: "oreo", name: "Oreo", price: 14.0, desc: "Creme de chocolate com biscoito Oreo crocante." },
+      { id: "morango-ninho", name: "Ninho com Morango", price: 14.0, desc: "Creme de Ninho com pedaços de morango fresco." },
     ],
-    combos: [
-      {
-        nome: "Combo 3 Sabores",
-        preco: 30,
-        quantidade: 3,
-      },
-      {
-        nome: "Combo 5 Sabores",
-        preco: 50,
-        quantidade: 5,
-      },
+  },
+  {
+    id: "promo",
+    title: "Combos & Promo",
+    items: [
+      { id: "combo3", name: "Combo 3 Sabores", price: 30.0, desc: "Escolha 3 sabores diferentes." },
+      { id: "combo5", name: "Combo 5 Sabores", price: 50.0, desc: "Escolha 5 sabores diferentes." },
     ],
-  };
+  },
+];
 
-  const adicionarAoCarrinho = (produto) => {
-    setCarrinho([...carrinho, { ...produto }]);
-  };
+export default function DoceEncantoSite() {
+  const [cart, setCart] = useState({});
+  const [payment, setPayment] = useState("Pix");
+  const [deliveryType, setDeliveryType] = useState("Retirada");
+  const [address, setAddress] = useState({
+    nome: "",
+    telefone: "",
+    rua: "",
+    numero: "",
+    bairro: "",
+    complemento: "",
+    referencia: "",
+  });
+  const [obs, setObs] = useState("");
 
-  const removerDoCarrinho = (index) => {
-    const novoCarrinho = [...carrinho];
-    novoCarrinho.splice(index, 1);
-    setCarrinho(novoCarrinho);
-  };
+  const allItems = useMemo(() => CATEGORIES.flatMap((c) => c.items), []);
 
-  const total = useMemo(() => {
-    let soma = carrinho.reduce((acc, item) => acc + item.preco, 0);
-    if (entrega === "vila") soma += 3;
-    if (entrega === "tucurui") soma += 5;
-    return soma;
-  }, [carrinho, entrega]);
-
-  const finalizarPedido = () => {
-    let mensagem = `🍰 *Pedido Doce Encanto* 🍰\n\n`;
-
-    carrinho.forEach((item, i) => {
-      mensagem += `${i + 1}. ${item.nome} - R$${item.preco}\n`;
+  const totals = useMemo(() => {
+    let subtotal = 0;
+    Object.values(cart).forEach(({ ref, qty }) => {
+      subtotal += ref.price * qty;
     });
+    let entrega = 0;
+    if (deliveryType === "Vila") entrega = 3;
+    if (deliveryType === "Tucuruí") entrega = 5;
+    const total = subtotal + entrega;
+    return { subtotal, entrega, total };
+  }, [cart, deliveryType]);
 
-    mensagem += `\n📦 Total: R$${total}\n`;
-
-    if (entrega === "vila") {
-      mensagem += `🚚 Entrega na *Vila* (Taxa R$3, saída às 16h)\n`;
-    } else if (entrega === "tucurui") {
-      mensagem += `🚚 Entrega em *Tucuruí* (Taxa R$5, saída às 18h)\n`;
-    } else {
-      mensagem += `✅ Retirada no local\n`;
+  function addItem(ref) {
+    if (ref.id === "combo3" || ref.id === "combo5") {
+      const qtd = ref.id === "combo3" ? 3 : 5;
+      const sabores = prompt(`Digite os ${qtd} sabores que deseja no ${ref.name}:`);
+      const refComSabores = { ...ref, name: `${ref.name} (${sabores})` };
+      setCart((prev) => {
+        const curr = prev[ref.id]?.qty || 0;
+        return { ...prev, [ref.id]: { ref: refComSabores, qty: curr + 1 } };
+      });
+      return;
     }
+    setCart((prev) => {
+      const curr = prev[ref.id]?.qty || 0;
+      return { ...prev, [ref.id]: { ref, qty: curr + 1 } };
+    });
+  }
 
-    if (nome) mensagem += `\n🙍 Nome: ${nome}`;
-    if (endereco) mensagem += `\n🏠 Endereço: ${endereco}`;
+  function removeItem(ref) {
+    setCart((prev) => {
+      const curr = prev[ref.id]?.qty || 0;
+      const nextQty = Math.max(0, curr - 1);
+      const next = { ...prev };
+      if (nextQty === 0) delete next[ref.id];
+      else next[ref.id] = { ref, qty: nextQty };
+      return next;
+    });
+  }
 
-    const url = `https://wa.me/5594999999999?text=${encodeURIComponent(
-      mensagem
-    )}`;
+  function clearCart() {
+    setCart({});
+  }
+
+  function buildWhatsappText() {
+    const linhas = [];
+    linhas.push("🍰 *Doce Encanto* – Pedido pelo site");
+    linhas.push("Tamanho do pote: 250g");
+    linhas.push("");
+    if (Object.keys(cart).length === 0) {
+      linhas.push("(Carrinho vazio)");
+    } else {
+      linhas.push("*Itens:* ");
+      Object.values(cart).forEach(({ ref, qty }) => {
+        linhas.push(`• ${ref.name} x${qty} — ${BRL.format(ref.price * qty)}`);
+      });
+    }
+    linhas.push("");
+    linhas.push(`Subtotal: ${BRL.format(totals.subtotal)}`);
+    if (totals.entrega > 0) {
+      linhas.push(`Taxa de entrega: ${BRL.format(totals.entrega)}`);
+      if (deliveryType === "Vila") linhas.push("➡️ Entrega na Vila (saída às 16h)");
+      if (deliveryType === "Tucuruí") linhas.push("➡️ Entrega em Tucuruí (saída às 18h)");
+    }
+    linhas.push(`Total: *${BRL.format(totals.total)}*`);
+    linhas.push("");
+    linhas.push(`Forma de pagamento: *${payment}*`);
+    linhas.push(`Recebimento: *${deliveryType}*`);
+    if (deliveryType !== "Retirada") {
+      linhas.push("");
+      linhas.push("*Endereço para entrega:* ");
+      linhas.push(`Nome: ${address.nome}`);
+      if (address.telefone) linhas.push(`Telefone: ${address.telefone}`);
+      linhas.push(`Rua: ${address.rua}, Nº ${address.numero}`);
+      linhas.push(`Bairro: ${address.bairro}`);
+      if (address.complemento) linhas.push(`Compl.: ${address.complemento}`);
+      if (address.referencia) linhas.push(`Ref.: ${address.referencia}`);
+    } else {
+      if (address.nome) linhas.push(`Retirada em nome de: ${address.nome}`);
+      if (address.telefone) linhas.push(`Telefone: ${address.telefone}`);
+    }
+    if (obs) {
+      linhas.push("");
+      linhas.push(`Obs.: ${obs}`);
+    }
+    linhas.push("");
+    linhas.push("Obrigado por comprar com a gente 💖");
+    return linhas.join("\n");
+  }
+
+  function sendToWhatsApp() {
+    const msg = buildWhatsappText();
+    const number = "5594981176517";
+    const url = `https://wa.me/${number}?text=${encodeURIComponent(msg)}`;
     window.open(url, "_blank");
-  };
+  }
 
   return (
-    <div className="min-h-screen bg-pink-50 text-brown-900 flex flex-col items-center">
-      {/* Logo */}
-      <header className="py-6 flex flex-col items-center">
-        <img src="/logo.png" alt="Logo Doce Encanto" className="w-40 h-40" />
-        <h1 className="text-3xl font-bold text-brown-700">Doce Encanto</h1>
-        <p className="italic text-brown-600 mt-2">
-          Bolo no pote • 250g cada
-        </p>
+    <div className="min-h-screen bg-rose-50 text-stone-800">
+      {/* Header */}
+      <header className="sticky top-0 z-40 backdrop-blur bg-rose-50/80 border-b border-rose-200">
+        <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <img src="/logo.png" alt="Doce Encanto" className="h-12 w-12 rounded-full ring-2 ring-rose-200 object-cover" />
+            <div>
+              <h1 className="text-xl font-bold text-amber-900">Doce Encanto</h1>
+              <p className="text-xs text-amber-900/70">Bolo no pote – 250g • Tucuruí/PA</p>
+            </div>
+          </div>
+          <a href="#cardapio" className="px-4 py-2 rounded-2xl bg-rose-200 text-amber-900 font-medium shadow-sm hover:shadow transition">
+            Ver cardápio
+          </a>
+        </div>
       </header>
 
-      {/* Produtos */}
-      <main className="w-full max-w-2xl px-4">
-        <section className="mb-8">
-          <h2 className="text-xl font-semibold border-b pb-2 mb-4 text-brown-700">
-            Sabores Clássicos
-          </h2>
-          <div className="grid grid-cols-1 gap-3">
-            {produtos.classicos.map((p, i) => (
-              <div
-                key={i}
-                className="flex justify-between items-center bg-white p-3 rounded-2xl shadow"
-              >
-                <span>{p.nome}</span>
-                <button
-                  onClick={() => adicionarAoCarrinho(p)}
-                  className="bg-pink-400 text-white px-3 py-1 rounded-xl"
-                >
-                  R${p.preco}
-                </button>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <section className="mb-8">
-          <h2 className="text-xl font-semibold border-b pb-2 mb-4 text-brown-700">
-            Sabores Especiais
-          </h2>
-          <div className="grid grid-cols-1 gap-3">
-            {produtos.especiais.map((p, i) => (
-              <div
-                key={i}
-                className="flex justify-between items-center bg-white p-3 rounded-2xl shadow"
-              >
-                <span>{p.nome}</span>
-                <button
-                  onClick={() => adicionarAoCarrinho(p)}
-                  className="bg-pink-400 text-white px-3 py-1 rounded-xl"
-                >
-                  R${p.preco}
-                </button>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <section className="mb-8">
-          <h2 className="text-xl font-semibold border-b pb-2 mb-4 text-brown-700">
-            Combos
-          </h2>
-          <div className="grid grid-cols-1 gap-3">
-            {produtos.combos.map((p, i) => (
-              <div
-                key={i}
-                className="flex justify-between items-center bg-white p-3 rounded-2xl shadow"
-              >
-                <span>{p.nome}</span>
-                <button
-                  onClick={() => {
-                    const sabores = prompt(
-                      `Digite quais ${p.quantidade} sabores deseja para o ${p.nome}:`
-                    );
-                    adicionarAoCarrinho({ ...p, nome: `${p.nome} (${sabores})` });
-                  }}
-                  className="bg-pink-400 text-white px-3 py-1 rounded-xl"
-                >
-                  R${p.preco}
-                </button>
-              </div>
-            ))}
-          </div>
-        </section>
+      {/* Seção cardápio */}
+      <main id="cardapio" className="max-w-5xl mx-auto px-4 py-6 space-y-10">
+        {CATEGORIES.map((cat) => (
+          <section key={cat.id}>
+            <h2 className="text-lg font-bold text-amber-900 mb-3">{cat.title}</h2>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {cat.items.map((item) => (
+                <div key={item.id} className="rounded-2xl border border-rose-200 bg-white shadow-sm hover:shadow p-4 flex flex-col justify-between">
+                  <div>
+                    <h3 className="font-semibold text-stone-900">{item.name}</h3>
+                    <p className="text-sm text-stone-600">{item.desc}</p>
+                  </div>
+                  <div className="mt-3 flex items-center justify-between">
+                    <span className="text-amber-900 font-bold">{BRL.format(item.price)}</span>
+                    <button onClick={() => addItem(item)} className="px-3 py-1 rounded-xl bg-rose-200 text-amber-900 text-sm font-medium hover:shadow">
+                      Adicionar
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        ))}
       </main>
 
       {/* Carrinho */}
-      <aside className="w-full max-w-2xl px-4 mt-8 mb-6">
-        <h2 className="text-xl font-semibold border-b pb-2 mb-4 text-brown-700">
-          Carrinho
-        </h2>
-        {carrinho.length === 0 && (
-          <p className="text-gray-500">Seu carrinho está vazio</p>
+      <aside className="max-w-5xl mx-auto px-4 py-6 border-t border-rose-200">
+        <h2 className="text-lg font-bold text-amber-900 mb-3">🛒 Seu Carrinho</h2>
+        {Object.keys(cart).length === 0 ? (
+          <p className="text-stone-500">Carrinho vazio.</p>
+        ) : (
+          <ul className="space-y-2">
+            {Object.values(cart).map(({ ref, qty }) => (
+              <li key={ref.id} className="flex items-center justify-between">
+                <span>{ref.name} x{qty}</span>
+                <div className="flex items-center gap-2">
+                  <button onClick={() => removeItem(ref)} className="px-2 py-1 bg-rose-100 rounded-lg">-</button>
+                  <span>{qty}</span>
+                  <button onClick={() => addItem(ref)} className="px-2 py-1 bg-rose-100 rounded-lg">+</button>
+                  <span className="font-medium">{BRL.format(ref.price * qty)}</span>
+                </div>
+              </li>
+            ))}
+          </ul>
         )}
-        {carrinho.map((item, i) => (
-          <div
-            key={i}
-            className="flex justify-between items-center bg-white p-3 mb-2 rounded-2xl shadow"
-          >
-            <span>{item.nome}</span>
-            <div className="flex items-center gap-2">
-              <span className="text-sm">R${item.preco}</span>
-              <button
-                onClick={() => removerDoCarrinho(i)}
-                className="text-red-500"
-              >
-                X
-              </button>
-            </div>
-          </div>
-        ))}
-
-        {/* Entrega */}
-        <div className="mt-6">
-          <label className="block font-medium mb-2 text-brown-700">
-            Tipo de entrega
-          </label>
-          <select
-            value={entrega}
-            onChange={(e) => setEntrega(e.target.value)}
-            className="w-full border rounded-lg p-2"
-          >
-            <option value="">Retirada no local</option>
-            <option value="vila">Entrega na Vila (R$3, saída 16h)</option>
-            <option value="tucurui">Entrega em Tucuruí (R$5, saída 18h)</option>
-          </select>
+        <div className="mt-4 space-y-1 text-sm">
+          <p>Subtotal: {BRL.format(totals.subtotal)}</p>
+          {totals.entrega > 0 && <p>Entrega: {BRL.format(totals.entrega)}</p>}
+          <p className="font-bold">Total: {BRL.format(totals.total)}</p>
         </div>
-
-        {/* Nome e Endereço */}
-        <div className="mt-4">
-          <input
-            type="text"
-            placeholder="Seu nome"
-            value={nome}
-            onChange={(e) => setNome(e.target.value)}
-            className="w-full border rounded-lg p-2 mb-2"
-          />
-          <input
-            type="text"
-            placeholder="Endereço (se entrega)"
-            value={endereco}
-            onChange={(e) => setEndereco(e.target.value)}
-            className="w-full border rounded-lg p-2"
-          />
+        <div className="mt-4 flex gap-2">
+          <button onClick={clearCart} className="px-3 py-2 rounded-xl bg-stone-200 text-stone-700 text-sm">Limpar</button>
+          <button onClick={sendToWhatsApp} className="px-3 py-2 rounded-xl bg-green-500 text-white text-sm font-medium shadow hover:shadow-md">
+            Finalizar pedido no WhatsApp
+          </button>
         </div>
-
-        {/* Total */}
-        <div className="mt-6 flex justify-between items-center font-bold text-lg">
-          <span>Total</span>
-          <span>R${total}</span>
-        </div>
-
-        <button
-          onClick={finalizarPedido}
-          className="w-full mt-4 bg-pink-500 text-white py-3 rounded-2xl text-lg font-semibold shadow"
-        >
-          Finalizar Pedido no WhatsApp
-        </button>
       </aside>
     </div>
   );
-};
-
-export default App;
+}
